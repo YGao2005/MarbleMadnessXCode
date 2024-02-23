@@ -1,6 +1,8 @@
 #include "StudentWorld.h"
 #include "GameConstants.h"
 #include <string>
+#include <sstream>
+#include <iomanip>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetPath)
@@ -13,14 +15,18 @@ GameWorld* createStudentWorld(string assetPath)
 StudentWorld::StudentWorld(string assetPath)
 : GameWorld(assetPath)
 {
+    m_crystals = 0;
+    m_avatar = nullptr;
 }
 
 int StudentWorld::init()
 {
     Level lev(assetPath());
-    string levelFile = "level01.txt";
+    ostringstream oss;
+    oss << "level" << setw(2) << setfill('0') << getLevel();
+    string levelFile = oss.str() + ".txt";
     Level::LoadResult result = lev.loadLevel(levelFile);
-if (result == Level::load_fail_file_not_found)
+    if (result == Level::load_fail_file_not_found || getLevel() == 99)
     {
         return GWSTATUS_PLAYER_WON;
     }
@@ -43,9 +49,13 @@ if (result == Level::load_fail_file_not_found)
                 case Level::empty:
                     break;
                 case Level::exit:
+                    m_actors.push_front(new Exit(x, y, this));
+                    endX = x;
+                    endY = y;
                     break;
                 case Level::player:
-                    m_actors.push_front(new Avatar(x, y, this));
+                    if(m_avatar == nullptr)
+                        m_avatar = new Avatar(x, y, this);
                     break;
                 case Level::horiz_ragebot:
                     break;
@@ -63,6 +73,8 @@ if (result == Level::load_fail_file_not_found)
                 case Level::pit:
                     break;
                 case Level::crystal:
+                    m_actors.push_front(new Crystal(x, y, this));
+                    m_crystals++;
                     break;
                 case Level::restore_health:
                     break;
@@ -82,12 +94,17 @@ int StudentWorld::move()
     // This code is here merely to allow the game to build, run, and terminate after you type q
 
     setGameStatText("Game will end when you type q");
-
+    if (m_avatar != nullptr)
+        m_avatar->doSomething();
     for(auto & m_actor : m_actors)
     {
         m_actor->doSomething();
     }
-
+    if (getAvatar()->getX() == endX && getAvatar()->getY() == endY && getCrystals() == 0) {
+        playSound(SOUND_FINISHED_LEVEL);
+        increaseScore(2000);
+        return GWSTATUS_FINISHED_LEVEL;
+    }
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -98,6 +115,12 @@ StudentWorld::~StudentWorld()
 
 void StudentWorld::cleanUp()
 {
+
+    if(m_avatar != nullptr){
+        delete m_avatar;
+        m_avatar = nullptr;
+    }
+
     for(auto & m_actor : m_actors)
     {
         delete m_actor;
@@ -115,4 +138,14 @@ bool StudentWorld::canWalk(int x, int y)
         }
     }
     return true;
+}
+
+Actor *StudentWorld::getAvatar()
+{
+    return m_avatar;
+}
+
+void StudentWorld::decCrystals()
+{
+    m_crystals--;
 }

@@ -18,10 +18,16 @@ public:
   virtual int move();
   virtual void cleanUp();
   bool canWalk(int x, int y);
-    
+  Actor *getAvatar();
+  void decCrystals();
+  int getCrystals() { return m_crystals; }
 
 private:
     std::list<Actor*> m_actors;
+    Avatar* m_avatar;
+    int m_crystals;
+    int endX;
+    int endY;
 };
 
 #endif // STUDENTWORLD_H_

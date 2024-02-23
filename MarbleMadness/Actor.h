@@ -33,12 +33,22 @@ private:
     bool m_tangible;
 };
 
+class Collectible : public Actor
+{
+public:
+    Collectible(int imageID, double startX, double startY, StudentWorld* world)
+        : Actor(imageID, startX, startY, none, world, false), isCollected(false){}
+    virtual void doSomething() {}
+    bool getCollected() const { return isCollected; }
+    void setCollected(bool collected) { isCollected = collected; }
+private:
+    bool isCollected;
+};
+
 class Wall : public Actor
 {
 public:
-    Wall(double startX, double startY, StudentWorld* world) : Actor(IID_WALL, startX, startY, none, world, true) {
-        setVisible(true);
-    }
+    Wall(double startX, double startY, StudentWorld* world) : Actor(IID_WALL, startX, startY, none, world, true) {}
     virtual void doSomething() {}
 };
 
@@ -49,6 +59,23 @@ public:
     Avatar(double startX, double startY, StudentWorld *world) : Actor(IID_PLAYER, startX, startY, right, world, false) {}
     virtual void doSomething();
 
+};
+
+class Crystal : public Collectible
+{
+public:
+    Crystal(double startX, double startY, StudentWorld *world) : Collectible(IID_CRYSTAL, startX, startY, world) {}
+    virtual void doSomething();
+};
+
+class Exit : public Actor
+{
+public:
+    Exit(double startX, double startY, StudentWorld *world)
+        : Actor(IID_EXIT, startX, startY, none, world, false) {
+        setVisible(false);
+    }
+    virtual void doSomething();
 };
 
 #endif // ACTOR_H_
